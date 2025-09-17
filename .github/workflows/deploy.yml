@@ -1,0 +1,37 @@
+﻿name: Deploy to VM
+
+on:
+  # otomatis setelah workflow publish selesai sukses
+  workflow_run:
+    workflows: ["Publish Docker image (GHCR)"]
+    types: [completed]
+  # bisa dijalankan manual dari tab Actions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    # hanya ketika publish sukses di branch main, atau kalau manual run
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            # Tag image = SHA dari workflow yang memicu deploy (anti-race)
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              IMAGE="ghcr.io/${{ github.repository }}:${{ github.sha }}"
+            else
+              IMAGE="ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}"
+            fi
+            echo "Deploying IMAGE=$IMAGE"
+            IMAGE="$IMAGE" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
