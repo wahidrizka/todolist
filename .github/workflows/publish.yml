@@ -22,7 +22,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-- name: Set up Buildx
+
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
@@ -32,7 +33,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push (explicit tags)
+      - name: Build & push (latest + sha)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -40,12 +41,9 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            GIT_REF=${{ github.ref_name }}
+            GITHUB_REPOSITORY=${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Echo tags pushed
-        run: |
-          echo "Pushed:"
-          echo " - ghcr.io/${{ github.repository }}:latest"
-          echo " - ghcr.io/${{ github.repository }}:${{ github.sha }}"
-
