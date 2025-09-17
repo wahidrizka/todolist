@@ -1,0 +1,18 @@
+﻿# build
+target/
+.mvn/
+**/surefire-reports/
+**/failsafe-reports/
+
+# vcs/ide
+.git
+.github
+.idea
+*.iml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+
+# misc
+README.md~
