@@ -1,12 +1,17 @@
 ﻿name: Deploy to VM
 
 on:
-  # otomatis setelah workflow publish selesai sukses
   workflow_run:
     workflows: ["Publish Docker image (GHCR)"]
-    types: [completed]
-  # bisa dijalankan manual dari tab Actions
-  workflow_dispatch:
+    types: [completed]              # deploy otomatis saat publish image (merge ke main)
+  release:
+    types: [published]              # deploy otomatis saat GitHub Release published
+  workflow_dispatch:                # bisa manual deploy
+    inputs:
+      tag:
+        description: "Image tag to deploy (e.g. v0.1.0 or latest). Leave empty to use SHA."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,10 +19,38 @@ permissions:
 
 jobs:
   deploy:
-    # hanya ketika publish sukses di branch main, atau kalau manual run
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    # jalankan jika:
+    # - manual dispatch, atau
+    # - publish docker image sukses di main, atau
+    # - release published
+    if: ${{ github.event_name == 'workflow_dispatch'
+            || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+            || github.event_name == 'release' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve image to deploy
+        id: img
+        shell: bash
+        run: |
+          REPO="ghcr.io/${{ github.repository }}"
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+            echo "image=${REPO}:${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # default: gunakan SHA dari workflow_run (publish di main) atau dari commit saat ini
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "image=${REPO}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=${REPO}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -27,11 +60,5 @@ jobs:
           script_stop: true
           command_timeout: 30m
           script: |
-            # Tag image = SHA dari workflow yang memicu deploy (anti-race)
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              IMAGE="ghcr.io/${{ github.repository }}:${{ github.sha }}"
-            else
-              IMAGE="ghcr.io/${{ github.repository }}:${{ github.event.workflow_run.head_sha }}"
-            fi
-            echo "Deploying IMAGE=$IMAGE"
-            IMAGE="$IMAGE" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
+            echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
+            IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
