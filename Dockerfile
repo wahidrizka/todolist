@@ -13,6 +13,14 @@ RUN --mount=type=cache,target=/root/.m2 mvn -q -B package -DskipTests
 
 # ---------- Runtime stage ----------
 FROM eclipse-temurin:17-jre-jammy
+
+# --- Git metadata from workflow ---
+ARG GIT_SHA
+ARG GIT_REF
+ENV GIT_SHA=${GIT_SHA} \
+    GIT_REF=${GIT_REF}
+# ----------------------------------
+
 WORKDIR /app
 
 # User non-root
