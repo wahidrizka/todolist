@@ -5,7 +5,6 @@ target/
 **/failsafe-reports/
 
 # vcs/ide
-.git
 .github
 .idea
 *.iml
