@@ -1,4 +1,4 @@
-﻿name: Publish Release image (GHCR)
+name: Publish Release image (GHCR)
 
 on:
     release:
@@ -6,38 +6,71 @@ on:
     workflow_dispatch:
         inputs:
             tag:
-                description: "Tag rilis yang akan dipublish (mis. v0.2.0)"
+                description: 'Release tag (mis. v0.2.1)'
                 required: true
+                default: v0.2.1
 
 permissions:
     contents: read
     packages: write
 
+concurrency:
+    group: publish-release-${{ github.ref_name }}
+    cancel-in-progress: false
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
 jobs:
     build-and-push:
         runs-on: ubuntu-latest
-        env:
-            REL_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-            IMAGE: ghcr.io/${{ github.repository_owner }}/todolist
         steps:
-            -   uses: actions/checkout@v4
+            -   name: Checkout
+                uses: actions/checkout@v4
                 with:
                     fetch-depth: 0
 
-            # Set versi Maven = tag rilis, supaya /api/version bukan SNAPSHOT
-            -   name: Set Maven version from tag
-                run: ./mvnw -B -q versions:set -DnewVersion=${REL_TAG} versions:commit
-
-            -   name: Build jar (skip tests)
-                run: ./mvnw -B -q -DskipTests package
+            -   name: Resolve tag
+                id: vars
+                shell: bash
+                run: |
+                    if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                      TAG="${{ github.event.inputs.tag }}"
+                    else
+                      TAG="${{ github.event.release.tag_name }}"
+                    fi
+                    TAG="${TAG#refs/tags/}"
+                    echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                    echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
             -   name: Login to GHCR
-                run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+                uses: docker/login-action@v3
+                with:
+                    registry: ${{ env.REGISTRY }}
+                    username: ${{ github.actor }}
+                    password: ${{ secrets.GITHUB_TOKEN }}
 
-            -   name: Build & push images (tag rilis + latest)
-                run: |
-                    docker build \
-                      -t "${IMAGE}:${REL_TAG}" \
-                      -t "${IMAGE}:latest" .
-                    docker push "${IMAGE}:${REL_TAG}"
-                    docker push "${IMAGE}:latest"
+            -   name: Set up QEMU
+                uses: docker/setup-qemu-action@v3
+
+            -   name: Set up Buildx
+                uses: docker/setup-buildx-action@v3
+
+            -   name: Build & push image
+                uses: docker/build-push-action@v6
+                with:
+                    context: .
+                    file: ./Dockerfile
+                    push: true
+                    build-args: |
+                        APP_VERSION=${{ steps.vars.outputs.tag }}
+                        GIT_SHA=${{ steps.vars.outputs.sha }}
+                        GIT_REF=${{ steps.vars.outputs.tag }}
+                    tags: |
+                        ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+                        ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                    labels: |
+                        org.opencontainers.image.source=${{ github.repositoryUrl }}
+                        org.opencontainers.image.version=${{ steps.vars.outputs.tag }}
+                        org.opencontainers.image.revision=${{ steps.vars.outputs.sha }}
