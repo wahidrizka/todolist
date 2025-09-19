@@ -11,12 +11,13 @@ COPY pom.xml .
 COPY src ./src
 
 # Versi & metadata dari workflow
-ARG REVISION=0.0.1-SNAPSHOT
-ARG GIT_SHA
-ARG GIT_REF
+ARG APP_VERSION=0.0.1-SNAPSHOT
+ARG GIT_SHA=local
+ARG GIT_REF=local
+ENV GIT_SHA=$GIT_SHA GIT_REF=$GIT_REF
 
 # Build jar dengan versi sesuai REVISION (tanpa test)
-RUN mvn -B -ntp -DskipTests -Drevision=${REVISION} package
+RUN mvn -B -ntp -DskipTests -Drevision=${APP_VERSION} package
 
 ########################
 # Runtime stage (JRE)
