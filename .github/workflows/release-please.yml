@@ -1,0 +1,21 @@
+﻿name: Release Please
+
+on:
+  push:
+    branches: [ "main" ]   # jalan tiap ada perubahan di main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: simple          # hitung versi dari Conventional Commits
+          package-name: todolist
+          bump-minor-pre-major: true    # sebelum 1.0.0, feat -> minor
+          changelog-notes-type: default
