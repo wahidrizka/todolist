@@ -1,35 +1,37 @@
-﻿# ---------- Build stage ----------
+﻿# syntax=docker/dockerfile:1
+
+########################
+# Build stage (Maven)
+########################
 FROM maven:3.9.9-eclipse-temurin-17 AS build
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy POM dulu untuk cache dependency
+# Copy sources
 COPY pom.xml .
-# Cache repo Maven di layer terpisah
-RUN --mount=type=cache,target=/root/.m2 mvn -q -B dependency:go-offline
-
-# Copy source & build
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2 mvn -q -B package -DskipTests
 
-# ---------- Runtime stage ----------
-FROM eclipse-temurin:17-jre-jammy
-
-# --- Git metadata from workflow ---
+# Versi & metadata dari workflow
+ARG REVISION=0.0.1-SNAPSHOT
 ARG GIT_SHA
 ARG GIT_REF
-ENV GIT_SHA=${GIT_SHA} \
-    GIT_REF=${GIT_REF}
-# ----------------------------------
 
+# Build jar dengan versi sesuai REVISION (tanpa test)
+RUN mvn -B -ntp -DskipTests -Drevision=${REVISION} package
+
+########################
+# Runtime stage (JRE)
+########################
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# User non-root
-RUN useradd -r -u 1001 spring
-USER spring
+# Teruskan metadata ke runtime untuk /api/version fallback
+ARG GIT_SHA
+ARG GIT_REF
+ENV GIT_SHA=${GIT_SHA}
+ENV GIT_REF=${GIT_REF}
 
-# Copy fat-jar dari stage build
-COPY --from=build /app/target/todolist-0.0.1-SNAPSHOT.jar /app/app.jar
+# Copy jar hasil build
+COPY --from=build /workspace/target/*.jar /app/app.jar
 
 EXPOSE 8080
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
