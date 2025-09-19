@@ -1,64 +1,48 @@
 ﻿name: Deploy to VM
 
 on:
-  workflow_run:
-    workflows: ["Publish Docker image (GHCR)"]
-    types: [completed]              # deploy otomatis saat publish image (merge ke main)
-  release:
-    types: [published]              # deploy otomatis saat GitHub Release published
-  workflow_dispatch:                # bisa manual deploy
-    inputs:
-      tag:
-        description: "Image tag to deploy (e.g. v0.1.0 or latest). Leave empty to use SHA."
-        required: false
-        type: string
+    release:
+        types: [ published ]            # deploy otomatis saat GitHub Release published
+    workflow_dispatch: # opsi deploy manual (mis. rollback/tes)
+        inputs:
+            tag:
+                description: "Image tag to deploy (e.g. v0.2.1 or latest)"
+                required: false
+                type: string
 
 permissions:
-  contents: read
-  packages: read
+    contents: read
+    packages: read
 
 jobs:
-  deploy:
-    # jalankan jika:
-    # - manual dispatch, atau
-    # - publish docker image sukses di main, atau
-    # - release published
-    if: ${{ github.event_name == 'workflow_dispatch'
-            || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
-            || github.event_name == 'release' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Resolve image to deploy
-        id: img
-        shell: bash
-        run: |
-          REPO="ghcr.io/${{ github.repository }}"
-          if [ "${{ github.event_name }}" = "release" ]; then
-            TAG="${{ github.event.release.tag_name }}"
-            echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Resolve image to deploy
+                id: img
+                shell: bash
+                run: |
+                    REPO="ghcr.io/${{ github.repository }}"
+                    if [ "${{ github.event_name }}" = "release" ]; then
+                      TAG="${{ github.event.release.tag_name }}"
+                      echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
+                    else
+                      TAG="${{ inputs.tag }}"
+                      if [ -z "$TAG" ]; then
+                        echo "Please provide 'tag' when running manually." >&2
+                        exit 1
+                      fi
+                      echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
+                    fi
 
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
-            echo "image=${REPO}:${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # default: gunakan SHA dari workflow_run (publish di main) atau dari commit saat ini
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "image=${REPO}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "image=${REPO}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
-          command_timeout: 30m
-          script: |
-            echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
-            IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
+            -   name: Deploy over SSH
+                uses: appleboy/ssh-action@v1
+                with:
+                    host: ${{ secrets.DEPLOY_HOST }}
+                    username: ${{ secrets.DEPLOY_USER }}
+                    key: ${{ secrets.SSH_PRIVATE_KEY }}
+                    script_stop: true
+                    command_timeout: 30m
+                    script: |
+                        echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
+                        IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
