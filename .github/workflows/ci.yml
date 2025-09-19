@@ -15,6 +15,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Code style check (Spotless)
+        run: mvn -B -ntp spotless:check
+
+      - name: Lint (Checkstyle)
+        run: mvn -B -ntp -DskipTests verify
       - name: Set up JDK 17 (Temurin) with Maven cache
         uses: actions/setup-java@v4
         with:
@@ -32,3 +38,4 @@ jobs:
             **/target/surefire-reports/**
             **/target/failsafe-reports/**
           if-no-files-found: ignore
+
