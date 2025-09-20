@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/wahidrizka/todolist/compare/v0.3.2...v0.4.0) (2025-09-20)
+
+
+### Features
+
+* **todo:** add DELETE /api/todos/{id} and implement service.delete ([f3dd620](https://github.com/wahidrizka/todolist/commit/f3dd620649d4b7423e4d735eebfaae718de0173c))
+* **todo:** tambah DELETE /api/todos/{id} + perkuat WebMvc tests ([bbb2e36](https://github.com/wahidrizka/todolist/commit/bbb2e36016330f7fd5a985a768e7beff63cb29a7))
+
 ## [0.3.2](https://github.com/wahidrizka/todolist/compare/v0.3.1...v0.3.2) (2025-09-20)
 
 
