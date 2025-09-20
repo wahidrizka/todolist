@@ -9,6 +9,7 @@ Actions)**.
 - `GET /api/health` — health check sederhana
 - `POST /api/todos` — buat todo baru
 - `GET /api/todos` — daftar semua todo
+- `GET /api/todos/{id}` — todo
 - Validasi request (Jakarta Validation)
 - OpenAPI UI: **/scalar** (JSON: **/v3/api-docs**)
 
@@ -42,11 +43,11 @@ Respons:
 
 ```json
 {
-  "id": 1,
-  "title": "Belajar Spring",
-  "completed": false,
-  "createdAt": "2025-01-01T00:00:00Z",
-  "updatedAt": "2025-01-01T00:00:00Z"
+    "id": 1,
+    "title": "Belajar Spring",
+    "completed": false,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
 }
 ```
 
