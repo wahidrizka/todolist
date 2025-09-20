@@ -2,7 +2,7 @@
 
 on:
     workflow_run:
-        workflows: [ "Publish Release image (GHCR)" ]
+        workflows: [ "Publish Docker image (GHCR)", "Publish Release image (GHCR)" ]
         types: [ completed ]
     release:
         types: [ published ]
