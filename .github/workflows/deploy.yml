@@ -1,12 +1,16 @@
 ﻿name: Deploy to VM
 
 on:
-    release:
-        types: [ published ]
+    # HANYA jalan setelah image berhasil dipublish
+    workflow_run:
+        workflows: [ "Publish Release image (GHCR)" ]
+        types: [ completed ]
+
+    # Opsional: manual deploy / rollback
     workflow_dispatch:
         inputs:
             tag:
-                description: "Image tag to deploy (e.g. v0.3.3 or latest)"
+                description: "Image tag to deploy (e.g. v0.4.1 or latest)"
                 required: false
                 type: string
 
@@ -14,25 +18,45 @@ permissions:
     contents: read
     packages: read
 
+concurrency:
+    group: deploy-prod
+    cancel-in-progress: false
+
 jobs:
     deploy:
+        # Jalan kalau manual, atau kalau publish-image SUKSES
+        if: >
+            ${{
+              github.event_name == 'workflow_dispatch' ||
+              (github.event_name == 'workflow_run' &&
+               github.event.workflow_run.conclusion == 'success')
+            }}
         runs-on: ubuntu-latest
+
         steps:
             -   name: Resolve image to deploy
                 id: img
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 shell: bash
                 run: |
+                    set -euo pipefail
                     REPO="ghcr.io/${{ github.repository }}"
-                    if [ "${{ github.event_name }}" = "release" ]; then
-                      TAG="${{ github.event.release.tag_name }}"
-                    else
+
+                    if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
                       TAG="${{ inputs.tag }}"
-                      if [ -z "$TAG" ]; then
-                        echo "Please provide 'tag' when running manually." >&2
-                        exit 1
-                      fi
+                    else
+                      # Ambil tag rilis TERBARU (yang barusan publish-image sukses)
+                      TAG="$(gh release view --repo "${{ github.repository }}" --json tagName -q .tagName)"
                     fi
+
+                    if [ -z "${TAG}" ]; then
+                      echo "Gagal menentukan TAG rilis." >&2
+                      exit 1
+                    fi
+
                     echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
+                    echo "Will deploy $REPO:$TAG"
 
             -   name: Deploy over SSH
                 uses: appleboy/ssh-action@v1
