@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/wahidrizka/todolist/compare/v0.3.0...v0.3.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* **version:** perjelas deskripsi endpoint versi (tampilkan metadata build) ([ac0d125](https://github.com/wahidrizka/todolist/commit/ac0d1250f86a00f2dc635d02e9b139ac5c97d4a8))
+* **version:** perjelas deskripsi endpoint versi (tampilkan metadata build) ([4529373](https://github.com/wahidrizka/todolist/commit/4529373efc7aceb5a2d73bfd2631f2597d39393f))
+
 ## [0.3.0](https://github.com/wahidrizka/todolist/compare/v0.2.1...v0.3.0) (2025-09-20)
 
 
