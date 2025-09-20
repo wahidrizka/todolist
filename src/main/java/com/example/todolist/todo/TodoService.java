@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TodoService {
-  TodoResponse create(CreateTodoRequest req);
-
-  List<TodoResponse> list();
+  List<TodoResponse> findAll();
 
   Optional<TodoResponse> findById(long id);
+
+  TodoResponse create(CreateTodoRequest req);
+
+  boolean delete(long id); // NEW
 }
