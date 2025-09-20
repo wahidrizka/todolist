@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/todos")
-@Tag(name = "Todos", description = "CRUD sederhana untuk Todo")
+@Tag(name = "Todos", description = "Create Read Delete untuk Todo")
 public class TodoController {
 
   private final TodoService service;
