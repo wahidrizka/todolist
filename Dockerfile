@@ -19,7 +19,7 @@ ENV GIT_SHA=$GIT_SHA GIT_REF=$GIT_REF
 # Build jar dengan versi sesuai tag rilis (APP_VERSION), skip tests
 # (opsional) gunakan cache m2 agar build lebih cepat
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -ntp -DskipTests -Drevision=${APP_VERSION} clean package
+    mvn -B -ntp -DskipTests -Drevision=${APP_VERSION} package
 
 ########################
 # Runtime stage (JRE)
