@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +18,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/todos")
-@Tag(name = "Todos", description = "CRUD sederhana untuk Todo")
+@Tag(name = "Todos", description = "Create Read Delete untuk Todo")
 public class TodoController {
 
   private final TodoService service;
@@ -34,17 +35,25 @@ public class TodoController {
   }
 
   @GetMapping
-  @Operation(summary = "Daftar semua todo")
+  @Operation(summary = "List semua todo")
   public List<TodoResponse> list() {
-    return service.list();
+    return service.findAll();
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Todo berdasarkan id")
+  @Operation(summary = "Ambil detail todo by id")
   public ResponseEntity<TodoResponse> getById(@PathVariable long id) {
     return service
         .findById(id)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @DeleteMapping("/{id}")
+  @Operation(summary = "Hapus todo by id")
+  public ResponseEntity<Void> delete(@PathVariable long id) {
+    return service.delete(id)
+        ? ResponseEntity.noContent().build()
+        : ResponseEntity.notFound().build();
   }
 }
