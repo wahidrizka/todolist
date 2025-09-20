@@ -1,15 +1,18 @@
 ﻿name: Deploy to VM
 
 on:
-    workflow_run:
-        workflows: [ "Publish Docker image (GHCR)", "Publish Release image (GHCR)" ]
-        types: [ completed ]
+    # deploy otomatis saat rilis dipublish
     release:
         types: [ published ]
+    # atau setelah job publish image rilis sukses
+    workflow_run:
+        workflows: [ "Publish Release image (GHCR)" ]
+        types: [ completed ]
+    # tombol manual
     workflow_dispatch:
         inputs:
             tag:
-                description: "Image tag to deploy (e.g. v0.3.1 or latest)"
+                description: "Image tag to deploy (e.g. v0.3.2 or latest)"
                 required: false
                 type: string
 
@@ -19,26 +22,35 @@ permissions:
 
 jobs:
     deploy:
-        # otomatis kalau publish-image sukses, atau manual/rilis
         if: >
-            ${{
-              github.event_name == 'workflow_dispatch'
-              || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-              || github.event_name == 'release'
-            }}
+            github.event_name == 'release' ||
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+            github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         steps:
             -   name: Resolve image to deploy
                 id: img
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 shell: bash
                 run: |
                     REPO="ghcr.io/${{ github.repository }}"
-                    if [ "${{ github.event_name }}" = "release" ]; then
-                      TAG="${{ github.event.release.tag_name }}"
-                    elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
-                      TAG="${{ inputs.tag }}"
-                    else
-                      TAG="${{ github.event.workflow_run.head_sha }}"
+                    case "${{ github.event_name }}" in
+                      release)
+                        TAG="${{ github.event.release.tag_name }}"
+                        ;;
+                      workflow_dispatch)
+                        TAG="${{ inputs.tag }}"
+                        ;;
+                      workflow_run)
+                        # ambil tag rilis terbaru
+                        TAG="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
+                        ;;
+                    esac
+                    TAG="${TAG#refs/tags/}"
+                    if [ -z "$TAG" ]; then
+                      echo "ERROR: tag rilis tidak ditemukan. Beri input 'tag' saat manual." >&2
+                      exit 1
                     fi
                     echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
 
@@ -48,8 +60,7 @@ jobs:
                     host: ${{ secrets.DEPLOY_HOST }}
                     username: ${{ secrets.DEPLOY_USER }}
                     key: ${{ secrets.SSH_PRIVATE_KEY }}
-                    script_stop: true
-                    command_timeout: 30m
+                    timeout: "30m"
                     script: |
                         echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
                         IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh

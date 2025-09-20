@@ -3,14 +3,14 @@ name: Publish Release image (GHCR)
 on:
     release:
         types: [ published ]
-    # fallback: kalau event 'release' tidak memicu karena dibuat oleh Actions
+    # fallback kalau event 'release' tidak memicu karena dibuat oleh Actions
     workflow_run:
         workflows: [ "Release Please" ]
         types: [ completed ]
     workflow_dispatch:
         inputs:
             tag:
-                description: 'Release tag (mis. v0.3.1)'
+                description: 'Release tag (mis. v0.3.2)'
                 required: true
 
 permissions:
@@ -35,8 +35,7 @@ jobs:
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
-                with:
-                    fetch-depth: 0
+                with: { fetch-depth: 0 }
 
             -   name: Resolve tag
                 id: vars
@@ -51,7 +50,7 @@ jobs:
                         TAG="${{ github.event.inputs.tag }}"
                         ;;
                       workflow_run)
-                        # ambil tag rilis terbaru yang baru dibuat Release Please
+                        # ambil tag rilis terbaru (yang barusan dibuat Release Please)
                         TAG="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
                         ;;
                     esac
