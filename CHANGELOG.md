@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://github.com/wahidrizka/todolist/compare/v0.3.1...v0.3.2) (2025-09-20)
+
+
+### Bug Fixes
+
+* **version:** mengubah & menjadi dan ([e3b56de](https://github.com/wahidrizka/todolist/commit/e3b56dedbd5e1e5b7d2afa570518eaab2605d6b7))
+* **version:** mengubah & menjadi dan ([deec827](https://github.com/wahidrizka/todolist/commit/deec82719256404ad2f23c25def54d578e19ab70))
+
 ## [0.3.1](https://github.com/wahidrizka/todolist/compare/v0.3.0...v0.3.1) (2025-09-20)
 
 
