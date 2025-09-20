@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1](https://github.com/wahidrizka/todolist/compare/v0.4.0...v0.4.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* **release:** e2e trigger via Release Please ([b081583](https://github.com/wahidrizka/todolist/commit/b081583ce3e6647d5e54127079f2db9a03a14d10))
+* **release:** e2e trigger via Release Please ([dbc0285](https://github.com/wahidrizka/todolist/commit/dbc02855d04852480cc0414a9b824cb311c539b1))
+
 ## [0.4.0](https://github.com/wahidrizka/todolist/compare/v0.3.2...v0.4.0) (2025-09-20)
 
 
