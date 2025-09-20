@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/version")
-@Tag(name = "Version", description = "Informasi versi & metadata build")
+@Tag(name = "Version", description = "Informasi versi dan metadata build")
 public class VersionController {
 
   private final BuildProperties build;
