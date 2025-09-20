@@ -1,20 +1,15 @@
 ﻿name: Deploy to VM
 
 on:
-    # Auto-deploy setelah image berhasil di-publish oleh workflow publish
     workflow_run:
-        workflows: [ "Publish Docker image (GHCR)" ]
+        workflows: [ "Publish Release image (GHCR)" ]
         types: [ completed ]
-
-    # Auto-deploy saat GitHub Release dipublish
     release:
         types: [ published ]
-
-    # Deploy manual (bisa tentukan tag)
     workflow_dispatch:
         inputs:
             tag:
-                description: "Image tag to deploy (e.g. v0.2.1 or latest)"
+                description: "Image tag to deploy (e.g. v0.3.1 or latest)"
                 required: false
                 type: string
 
@@ -24,40 +19,27 @@ permissions:
 
 jobs:
     deploy:
-        # Hanya jalan kalau:
-        # - manual dispatch, atau
-        # - release published, atau
-        # - publish image sukses di main
-        if: |
-            github.event_name == 'workflow_dispatch' ||
-            github.event_name == 'release' ||
-            (github.event_name == 'workflow_run' &&
-             github.event.workflow_run.conclusion == 'success' &&
-             github.event.workflow_run.head_branch == 'main')
+        # otomatis kalau publish-image sukses, atau manual/rilis
+        if: >
+            ${{
+              github.event_name == 'workflow_dispatch'
+              || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+              || github.event_name == 'release'
+            }}
         runs-on: ubuntu-latest
-
         steps:
             -   name: Resolve image to deploy
                 id: img
                 shell: bash
                 run: |
                     REPO="ghcr.io/${{ github.repository }}"
-                    case "${{ github.event_name }}" in
-                      release)
-                        TAG="${{ github.event.release.tag_name }}"
-                        ;;
-                      workflow_dispatch)
-                        TAG="${{ inputs.tag }}"
-                        if [ -z "$TAG" ]; then
-                          echo "Please provide 'tag' when running manually." >&2
-                          exit 1
-                        fi
-                        ;;
-                      workflow_run)
-                        # pakai SHA dari workflow publish (kita memang nge-push image :<sha> di publish.yml)
-                        TAG="${{ github.event.workflow_run.head_sha }}"
-                        ;;
-                    esac
+                    if [ "${{ github.event_name }}" = "release" ]; then
+                      TAG="${{ github.event.release.tag_name }}"
+                    elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+                      TAG="${{ inputs.tag }}"
+                    else
+                      TAG="${{ github.event.workflow_run.head_sha }}"
+                    fi
                     echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
 
             -   name: Deploy over SSH
@@ -66,6 +48,7 @@ jobs:
                     host: ${{ secrets.DEPLOY_HOST }}
                     username: ${{ secrets.DEPLOY_USER }}
                     key: ${{ secrets.SSH_PRIVATE_KEY }}
+                    script_stop: true
                     command_timeout: 30m
                     script: |
                         echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
