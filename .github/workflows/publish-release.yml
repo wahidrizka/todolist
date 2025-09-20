@@ -3,15 +3,23 @@ name: Publish Release image (GHCR)
 on:
     release:
         types: [ published ]
+    # fallback: kalau event 'release' tidak memicu karena dibuat oleh Actions
+    workflow_run:
+        workflows: [ "Release Please" ]
+        types: [ completed ]
     workflow_dispatch:
         inputs:
             tag:
-                description: 'Tag rilis (mis. v0.3.1)'
+                description: 'Release tag (mis. v0.3.1)'
                 required: true
 
 permissions:
     contents: read
     packages: write
+
+concurrency:
+    group: publish-release-${{ github.ref_name }}
+    cancel-in-progress: false
 
 env:
     REGISTRY: ghcr.io
@@ -19,6 +27,10 @@ env:
 
 jobs:
     build-and-push:
+        if: >
+            github.event_name == 'release' ||
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+            github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
@@ -28,15 +40,24 @@ jobs:
 
             -   name: Resolve tag
                 id: vars
+                env:
+                    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 run: |
-                    if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-                      TAG="${{ github.event.inputs.tag }}"
-                    else
-                      TAG="${{ github.event.release.tag_name }}"
-                    fi
+                    case "${{ github.event_name }}" in
+                      release)
+                        TAG="${{ github.event.release.tag_name }}"
+                        ;;
+                      workflow_dispatch)
+                        TAG="${{ github.event.inputs.tag }}"
+                        ;;
+                      workflow_run)
+                        # ambil tag rilis terbaru yang baru dibuat Release Please
+                        TAG="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
+                        ;;
+                    esac
                     TAG="${TAG#refs/tags/}"
-                    echo "tag=$TAG" >> $GITHUB_OUTPUT
-                    echo "sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+                    echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+                    echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
             -   name: Login to GHCR
                 uses: docker/login-action@v3
@@ -44,6 +65,9 @@ jobs:
                     registry: ${{ env.REGISTRY }}
                     username: ${{ github.actor }}
                     password: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Set up QEMU
+                uses: docker/setup-qemu-action@v3
 
             -   name: Set up Buildx
                 uses: docker/setup-buildx-action@v3
