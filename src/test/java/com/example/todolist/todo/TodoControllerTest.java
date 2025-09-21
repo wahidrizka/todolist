@@ -84,6 +84,65 @@ class TodoControllerTest {
         .andExpect(jsonPath("$[1].title").value("B"));
   }
 
+  @Test
+  @DisplayName(
+      "GET /api/todos?page&size -> 200 OK + objek PageResult dengan items & total; meneruskan param ke service")
+  void list_paged_shouldReturn200_andPageResult() throws Exception {
+    when(todoService.findAll(eq("milk"), eq(true), eq(0), eq(2)))
+        .thenReturn(new PageResult<>(List.of(todo(1, "A", true), todo(2, "B", true)), 5));
+
+    mockMvc
+        .perform(
+            get("/api/todos")
+                .param("q", "milk")
+                .param("completed", "true")
+                .param("page", "0")
+                .param("size", "2"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items.length()").value(2))
+        .andExpect(jsonPath("$.items[0].id").value(1))
+        .andExpect(jsonPath("$.items[0].title").value("A"))
+        .andExpect(jsonPath("$.total").value(5));
+
+    verify(todoService).findAll(eq("milk"), eq(true), eq(0), eq(2));
+  }
+
+  @Test
+  @DisplayName("GET /api/todos?page=-1&size=10 -> 400 Bad Request (page negatif)")
+  void list_paged_shouldReturn400_whenPageNegative() throws Exception {
+    mockMvc
+        .perform(get("/api/todos").param("page", "-1").param("size", "10"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("GET /api/todos?page=0&size=0 -> 400 Bad Request (size 0)")
+  void list_paged_shouldReturn400_whenSizeZero() throws Exception {
+    mockMvc
+        .perform(get("/api/todos").param("page", "0").param("size", "0"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("GET /api/todos?page=0&size=1000 -> 400 Bad Request (size > 200)")
+  void list_paged_shouldReturn400_whenSizeTooLarge() throws Exception {
+    mockMvc
+        .perform(get("/api/todos").param("page", "0").param("size", "1000"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DisplayName("GET /api/todos?page=0&size=0 -> 400 dengan body error dari handler")
+  void list_paged_shouldReturn400_withValidationBody() throws Exception {
+    mockMvc
+        .perform(get("/api/todos").param("page", "0").param("size", "0"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("validation"))
+        .andExpect(jsonPath("$.message").value("Invalid request parameters"))
+        .andExpect(jsonPath("$.violations.length()").value(1))
+        .andExpect(jsonPath("$.violations[0].param").value("findAllPaged.size"));
+  }
+
   // === GET BY ID ===
 
   @Test

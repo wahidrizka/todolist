@@ -2,6 +2,7 @@ package com.example.todolist.todo;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,5 +89,42 @@ class JdbcTodoService implements TodoService {
             id)
         .stream()
         .findFirst();
+  }
+
+  @Override
+  public PageResult<TodoResponse> findAll(String q, Boolean completed, Integer page, Integer size) {
+    String normalizedQuery = (q == null) ? null : q.trim().toLowerCase();
+
+    StringBuilder where = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+
+    if (normalizedQuery != null && !normalizedQuery.isEmpty()) {
+      where.append(where.length() == 0 ? " where " : " and ");
+      where.append("lower(title) like ?");
+      args.add("%" + normalizedQuery + "%");
+    }
+    if (completed != null) {
+      where.append(where.length() == 0 ? " where " : " and ");
+      where.append("completed = ?");
+      args.add(completed);
+    }
+
+    // total
+    String countSql = "select count(*) from todos" + where;
+    int total = jdbc.queryForObject(countSql, Long.class, args.toArray()).intValue();
+
+    // data page
+    String dataSql =
+        "select id, title, completed, created_at, updated_at from todos"
+            + where
+            + " order by id limit ? offset ?";
+
+    List<Object> dataArgs = new ArrayList<>(args);
+    dataArgs.add(size);
+    dataArgs.add(page * size);
+
+    List<TodoResponse> items = jdbc.query(dataSql, M, dataArgs.toArray());
+
+    return new PageResult<>(items, total);
   }
 }
