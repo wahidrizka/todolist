@@ -61,4 +61,27 @@ public class InMemoryTodoService implements TodoService {
               return new TodoResponse(k, title, completed, oldVal.createdAt(), now);
             }));
   }
+
+  @Override
+  public PageResult<TodoResponse> findAll(String q, Boolean completed, Integer page, Integer size) {
+    String normalizedQuery = (q == null) ? null : q.trim().toLowerCase();
+
+    List<TodoResponse> filtered =
+        new ArrayList<>(store.values())
+            .stream()
+                .filter(
+                    t ->
+                        normalizedQuery == null
+                            || t.title().toLowerCase().contains(normalizedQuery))
+                .filter(t -> completed == null || t.completed() == completed)
+                .sorted(Comparator.comparing(TodoResponse::id))
+                .toList();
+
+    int total = filtered.size();
+    int fromIndex = Math.min(page * size, total);
+    int toIndex = Math.min(fromIndex + size, total);
+
+    List<TodoResponse> items = filtered.subList(fromIndex, toIndex);
+    return new PageResult<>(items, total);
+  }
 }
