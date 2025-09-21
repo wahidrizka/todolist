@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/wahidrizka/todolist/compare/v0.6.0...v0.7.0) (2025-09-21)
+
+
+### Features
+
+* **todo:** add pageable/filtering GET + implement services + bean validation and global handler ([eeac36a](https://github.com/wahidrizka/todolist/commit/eeac36abbd01a4d8c11348941a1f6e37321ef4c9))
+* **todo:** add pageable/filtering GET + implement services + bean validation and global handler ([70078b2](https://github.com/wahidrizka/todolist/commit/70078b2cc1fdbedc4ccafcfd50276dae6d8dac33))
+
 ## [0.6.0](https://github.com/wahidrizka/todolist/compare/v0.5.0...v0.6.0) (2025-09-21)
 
 
