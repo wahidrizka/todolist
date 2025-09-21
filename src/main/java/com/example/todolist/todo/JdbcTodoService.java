@@ -11,25 +11,25 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("prod") // aktif hanya saat profile prod
+@Profile("prod")
 class JdbcTodoService implements TodoService {
 
   private static final RowMapper<TodoResponse> M =
-      (rs, n) ->
+      (resultSet, n) ->
           new TodoResponse(
-              rs.getLong("id"),
-              rs.getString("title"),
-              rs.getBoolean("completed"),
-              ts(rs.getTimestamp("created_at")),
-              ts(rs.getTimestamp("updated_at")));
+              resultSet.getLong("id"),
+              resultSet.getString("title"),
+              resultSet.getBoolean("completed"),
+              toInstant(resultSet.getTimestamp("created_at")),
+              toInstant(resultSet.getTimestamp("updated_at")));
   private final JdbcTemplate jdbc;
 
   JdbcTodoService(JdbcTemplate jdbc) {
     this.jdbc = jdbc;
   }
 
-  private static Instant ts(Timestamp t) {
-    return (t == null) ? null : t.toInstant();
+  private static Instant toInstant(Timestamp timestamp) {
+    return timestamp == null ? null : timestamp.toInstant();
   }
 
   @Override
@@ -47,17 +47,46 @@ class JdbcTodoService implements TodoService {
   }
 
   @Override
-  public TodoResponse create(CreateTodoRequest req) {
-    // gunakan DEFAULT untuk kolom yg ada default (completed=false, created_at, updated_at=now())
+  public TodoResponse create(CreateTodoRequest request) {
     return jdbc.queryForObject(
         "insert into todos(title) values (?) "
             + "returning id, title, completed, created_at, updated_at",
         M,
-        req.title());
+        request.title());
   }
 
   @Override
   public boolean delete(long id) {
     return jdbc.update("delete from todos where id = ?", id) > 0;
+  }
+
+  @Override
+  public Optional<TodoResponse> update(long id, UpdateTodoRequest request) {
+    // Normalisasi title bila diisi
+    String newTitle = request.title();
+    if (newTitle != null) {
+      newTitle = newTitle.trim();
+      if (newTitle.isEmpty()) {
+        // anggap invalid -> jangan update title (treat as null)
+        newTitle = null;
+      }
+    }
+    Boolean newCompleted = request.completed();
+
+    // Update parsial: COALESCE(nilaiBaru, kolomLama)
+    return jdbc
+        .query(
+            "update todos set "
+                + "title = COALESCE(?, title), "
+                + "completed = COALESCE(?, completed), "
+                + "updated_at = now() "
+                + "where id = ? "
+                + "returning id, title, completed, created_at, updated_at",
+            M,
+            newTitle,
+            newCompleted,
+            id)
+        .stream()
+        .findFirst();
   }
 }
