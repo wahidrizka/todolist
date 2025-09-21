@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +19,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/todos")
-@Tag(name = "Todos", description = "Create Read Delete untuk Todo")
+@Tag(name = "Todos", description = "CRUD sederhana untuk Todo")
 public class TodoController {
 
   private final TodoService service;
@@ -29,22 +30,32 @@ public class TodoController {
 
   @PostMapping
   @Operation(summary = "Buat todo baru")
-  public ResponseEntity<TodoResponse> create(@Valid @RequestBody CreateTodoRequest req) {
-    TodoResponse created = service.create(req);
+  public ResponseEntity<TodoResponse> create(@Valid @RequestBody CreateTodoRequest request) {
+    TodoResponse created = service.create(request);
     return ResponseEntity.created(URI.create("/api/todos/" + created.id())).body(created);
   }
 
   @GetMapping
-  @Operation(summary = "List semua todo")
-  public List<TodoResponse> list() {
-    return service.findAll();
+  @Operation(summary = "Ambil semua todo")
+  public ResponseEntity<List<TodoResponse>> findAll() {
+    return ResponseEntity.ok(service.findAll());
   }
 
   @GetMapping("/{id}")
-  @Operation(summary = "Ambil detail todo by id")
-  public ResponseEntity<TodoResponse> getById(@PathVariable long id) {
+  @Operation(summary = "Ambil todo by id")
+  public ResponseEntity<TodoResponse> findById(@PathVariable long id) {
     return service
         .findById(id)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  @PatchMapping("/{id}")
+  @Operation(summary = "Edit todo (partial update)")
+  public ResponseEntity<TodoResponse> update(
+      @PathVariable long id, @RequestBody UpdateTodoRequest request) {
+    return service
+        .update(id, request)
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
@@ -52,8 +63,7 @@ public class TodoController {
   @DeleteMapping("/{id}")
   @Operation(summary = "Hapus todo by id")
   public ResponseEntity<Void> delete(@PathVariable long id) {
-    return service.delete(id)
-        ? ResponseEntity.noContent().build()
-        : ResponseEntity.notFound().build();
+    boolean removed = service.delete(id);
+    return removed ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 }

@@ -8,7 +8,9 @@ public interface TodoService {
 
   Optional<TodoResponse> findById(long id);
 
-  TodoResponse create(CreateTodoRequest req);
+  TodoResponse create(CreateTodoRequest request);
 
-  boolean delete(long id); // NEW
+  boolean delete(long id);
+
+  Optional<TodoResponse> update(long id, UpdateTodoRequest request);
 }

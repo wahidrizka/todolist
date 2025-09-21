@@ -1,10 +1,12 @@
 package com.example.todolist.todo;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -17,26 +19,20 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * WebMvc tests untuk {@link TodoController}. Pola: Arrange – Act – Assert. Semua akses ke storage
- * dimock via {@link TodoService}.
- */
-@SpringBootTest
-@AutoConfigureMockMvc
+/** Slice test untuk {@link TodoController} (MVC only). Storage dimock via {@link TodoService}. */
+@WebMvcTest(TodoController.class)
 class TodoControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockitoBean private TodoService todoService;
+  @MockBean private TodoService todoService;
 
   // === Helpers ===
-
   private static TodoResponse todo(long id, String title, boolean completed) {
     Instant now = Instant.parse("2025-01-01T00:00:00Z");
     return new TodoResponse(id, title, completed, now, now);
@@ -65,7 +61,6 @@ class TodoControllerTest {
   @Test
   @DisplayName("POST /api/todos -> 400 Bad Request saat title kosong")
   void create_shouldReturn400_whenTitleBlank() throws Exception {
-    // Tidak perlu stub service; gagal di layer validation (@NotBlank)
     mockMvc
         .perform(
             post("/api/todos").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"\"}"))
@@ -131,5 +126,57 @@ class TodoControllerTest {
     mockMvc.perform(delete("/api/todos/{id}", 999)).andExpect(status().isNotFound());
 
     verify(todoService).delete(999L);
+  }
+
+  // === PATCH (EDIT) ===
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 200 OK saat berhasil update title & completed")
+  void patch_shouldReturn200_whenUpdated() throws Exception {
+    when(todoService.update(eq(42L), any())).thenReturn(Optional.of(todo(42L, "Edited", true)));
+
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 42L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Edited\",\"completed\":true}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(42))
+        .andExpect(jsonPath("$.title").value("Edited"))
+        .andExpect(jsonPath("$.completed").value(true));
+
+    verify(todoService).update(eq(42L), any());
+  }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 200 OK saat hanya toggle completed")
+  void patch_shouldReturn200_whenToggleCompletedOnly() throws Exception {
+    when(todoService.update(eq(7L), any())).thenReturn(Optional.of(todo(7L, "Keep", true)));
+
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 7L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"completed\":true}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(7))
+        .andExpect(jsonPath("$.title").value("Keep"))
+        .andExpect(jsonPath("$.completed").value(true));
+
+    verify(todoService).update(eq(7L), any());
+  }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 404 Not Found saat id tidak ada")
+  void patch_shouldReturn404_whenMissing() throws Exception {
+    when(todoService.update(eq(999L), any())).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"x\"}"))
+        .andExpect(status().isNotFound());
+
+    verify(todoService).update(eq(999L), any());
   }
 }
