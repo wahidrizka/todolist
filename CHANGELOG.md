@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/wahidrizka/todolist/compare/v0.4.1...v0.5.0) (2025-09-21)
+
+
+### Features
+
+* **todo:** persist to Postgres in prod via JdbcTodoService; scope In… ([824754f](https://github.com/wahidrizka/todolist/commit/824754f0463e7a5f99a28a0174ed7995209db00e))
+* **todo:** persist to Postgres in prod via JdbcTodoService; scope InMemory to not-prod ([cf9ac3f](https://github.com/wahidrizka/todolist/commit/cf9ac3f60b25f297105e89abb409c7273da200ad))
+
 ## [0.4.1](https://github.com/wahidrizka/todolist/compare/v0.4.0...v0.4.1) (2025-09-20)
 
 
