@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/wahidrizka/todolist/compare/v0.5.0...v0.6.0) (2025-09-21)
+
+
+### Features
+
+* **todo:** add PATCH /api/todos/{id} to update title/completed ([25272e6](https://github.com/wahidrizka/todolist/commit/25272e6ab53f0ed9a2153894675975daabd43be4))
+* **todo:** support PATCH /api/todos/{id} (update title/completed) ([45a5400](https://github.com/wahidrizka/todolist/commit/45a54004112c7cfc18e91c470b78e25d387b343b))
+
 ## [0.5.0](https://github.com/wahidrizka/todolist/compare/v0.4.1...v0.5.0) (2025-09-21)
 
 
