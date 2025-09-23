@@ -49,11 +49,12 @@ class JdbcTodoService implements TodoService {
 
   @Override
   public TodoResponse create(CreateTodoRequest request) {
+    String title = request.title().trim();
     return jdbc.queryForObject(
         "insert into todos(title) values (?) "
             + "returning id, title, completed, created_at, updated_at",
         M,
-        request.title());
+        title);
   }
 
   @Override
