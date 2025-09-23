@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -53,5 +54,24 @@ public class ProblemDetailsExceptionHandler {
     problemDetail.setInstance(URI.create(request.getRequestURI()));
 
     return ResponseEntity.badRequest().body(problemDetail);
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ProblemDetail> handleMethodArgumentTypeMismatch(
+      MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+
+    ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+    pd.setType(URI.create("about:blank"));
+    pd.setTitle("Parameter type mismatch");
+    pd.setDetail("One or more request parameters have an invalid type.");
+    pd.setInstance(URI.create(request.getRequestURI()));
+
+    // Extension members untuk debugging ringan di klien
+    pd.setProperty("param", ex.getName());
+    pd.setProperty(
+        "expectedType", ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : null);
+    pd.setProperty("value", ex.getValue());
+
+    return ResponseEntity.badRequest().body(pd);
   }
 }
