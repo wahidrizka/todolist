@@ -29,7 +29,7 @@ public class ApiExceptionHandler {
     ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
     problemDetail.setType(URI.create("about:blank"));
     problemDetail.setTitle("Request parameter validation failed");
-    problemDetail.setDetail("One or more request paramteres are invalid.");
+    problemDetail.setDetail("One or more request parameters are invalid.");
     problemDetail.setInstance(URI.create(request.getRequestURI().toString()));
 
     // Extension member: daftar pelanggaran
