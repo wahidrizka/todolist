@@ -43,4 +43,15 @@ public class TodoV1ControllerTest {
         .andExpect(jsonPath("$.title").value("Request parameter validation failed"))
         .andExpect(jsonPath("$.status").value(400));
   }
+
+  @Test
+  void list_sizeIsNotANumber_shouldReturn400_withProblemJsonTypeMismatch() throws Exception {
+    mvc.perform(get("/api/v1/todos").param("size", "abc"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Parameter type mismatch"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.param").value("size"))
+        .andExpect(jsonPath("$.expectedType").value("Integer"));
+  }
 }
