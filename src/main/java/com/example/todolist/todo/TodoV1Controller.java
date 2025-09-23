@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Positive;
@@ -26,6 +30,16 @@ public class TodoV1Controller {
   }
 
   @GetMapping
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "OK"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Validation error (Problem Details)",
+        content =
+            @Content(
+                mediaType = "application/problem+json",
+                schema = @Schema(implementation = org.springframework.http.ProblemDetail.class)))
+  })
   @Operation(summary = "Ambil todos (paged) dengan default page=0,size=20")
   public ResponseEntity<PageResult<TodoResponse>> findAllPagedDefault(
       @RequestParam(name = "q", required = false) String q,
