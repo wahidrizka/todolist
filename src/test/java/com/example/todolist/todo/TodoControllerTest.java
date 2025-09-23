@@ -239,4 +239,35 @@ class TodoControllerTest {
 
     verify(todoService).update(eq(999L), any());
   }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 400 Problem+JSON saat title > 200")
+  void patch_shouldReturn400_withProblemJson_whenTitleTooLong() throws Exception {
+    String longTitle = "A".repeat(201);
+
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"title\":\"%s\"}", longTitle)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Request validation failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.errors.title[0]").value("title maksimal 200 karakter"));
+  }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 400 Problem+JSON saat JSON malformed")
+  void patch_shouldReturn400_withProblemJson_whenMalformedJson() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Bad JSON\"")) // kurang kurung tutup
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Malformed JSON request"))
+        .andExpect(jsonPath("$.status").value(400));
+  }
 }
