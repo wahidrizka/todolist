@@ -10,15 +10,7 @@ public interface TodoService {
    */
   List<TodoResponse> findAll();
 
-  /**
-   * Versi lengkap dengan filter & pagination. Untuk sementara diberi default agar implementasi lama
-   * tetap kompatibel. Langkah berikutnya kita akan implementasikan logic sebenarnya.
-   */
-  default PageResult<TodoResponse> findAll(
-      String q, Boolean completed, Integer page, Integer size) {
-    List<TodoResponse> items = findAll();
-    return new PageResult<>(items, items.size());
-  }
+  PageResult<TodoResponse> findAll(String q, Boolean completed, Integer page, Integer size);
 
   Optional<TodoResponse> findById(long id);
 
