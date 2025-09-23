@@ -54,4 +54,13 @@ public class TodoV1ControllerTest {
         .andExpect(jsonPath("$.param").value("size"))
         .andExpect(jsonPath("$.expectedType").value("Integer"));
   }
+
+  @Test
+  void list_pageNegative_shouldReturn400_withProblemJson() throws Exception {
+    mvc.perform(get("/api/v1/todos").param("page", "-1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Request parameter validation failed"))
+        .andExpect(jsonPath("$.status").value(400));
+  }
 }
