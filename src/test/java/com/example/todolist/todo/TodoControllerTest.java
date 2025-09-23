@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,10 +138,10 @@ class TodoControllerTest {
     mockMvc
         .perform(get("/api/todos").param("page", "0").param("size", "0"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("validation"))
-        .andExpect(jsonPath("$.message").value("Invalid request parameters"))
-        .andExpect(jsonPath("$.violations.length()").value(1))
-        .andExpect(jsonPath("$.violations[0].param").value("findAllPaged.size"));
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Request parameter validation failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.violations[0].message").value("must be greater than 0"));
   }
 
   // === GET BY ID ===
