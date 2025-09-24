@@ -2,8 +2,6 @@ package com.example.todolist.todo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -31,11 +28,9 @@ class JdbcTodoServiceIntegrationTest {
   @Container
   static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:15-alpine");
 
-  @Autowired DataSource dataSource;
   @Autowired JdbcTemplate jdbcTemplate;
   @Autowired TodoService todoService;
 
-  @DynamicPropertySource
   static void registerDataSourceProps(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
@@ -48,7 +43,7 @@ class JdbcTodoServiceIntegrationTest {
   @BeforeEach
   void clean() {
     // Bersihkan data sebelum tiap test; abaikan jika tabel belum ada (akan ada setelah Flyway)
-    jdbcTemplate.execute("delete from todos");
+    jdbcTemplate.execute("truncate table todos restart identity cascade");
   }
 
   @Test
