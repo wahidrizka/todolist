@@ -26,8 +26,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @ActiveProfiles("prod")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@org.springframework.context.annotation.Import(JdbcTodoServiceIntegrationTest.TestDbConfig.class)
 class JdbcTodoServiceIntegrationTest {
-
   @Container
   static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:15-alpine");
 
@@ -39,7 +39,7 @@ class JdbcTodoServiceIntegrationTest {
   static void registerDataSourceProps(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
-    registry.add("spring.datasource.password", POSTGRES::getUsername);
+    registry.add("spring.datasource.password", POSTGRES::getPassword);
     registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
     // Izinkan Flyway berjalan di test ini (default sudah on, ini explisit)
     registry.add("spring.flyway.enabled", () -> "true");
@@ -99,5 +99,34 @@ class JdbcTodoServiceIntegrationTest {
     assertEquals(25, p2.total());
     assertEquals(5, p2.items().size());
     assertEquals("Task 21", p2.items().get(0).title());
+  }
+
+  @org.springframework.boot.test.context.TestConfiguration
+  static class TestDbConfig {
+
+    @org.springframework.context.annotation.Bean
+    javax.sql.DataSource dataSource() {
+      org.springframework.jdbc.datasource.DriverManagerDataSource ds =
+          new org.springframework.jdbc.datasource.DriverManagerDataSource();
+      ds.setDriverClassName("org.postgresql.Driver");
+      ds.setUrl(POSTGRES.getJdbcUrl());
+      ds.setUsername(POSTGRES.getUsername());
+      ds.setPassword(POSTGRES.getPassword());
+      return ds;
+    }
+
+    @org.springframework.context.annotation.Bean
+    org.springframework.jdbc.core.JdbcTemplate jdbcTemplate(javax.sql.DataSource ds) {
+      return new org.springframework.jdbc.core.JdbcTemplate(ds);
+    }
+
+    // Jalankan migrasi agar tabel tersedia
+    @org.springframework.context.annotation.Bean(initMethod = "migrate")
+    org.flywaydb.core.Flyway flyway(javax.sql.DataSource ds) {
+      return org.flywaydb.core.Flyway.configure()
+          .dataSource(ds)
+          .locations("classpath:db/migration")
+          .load();
+    }
   }
 }
