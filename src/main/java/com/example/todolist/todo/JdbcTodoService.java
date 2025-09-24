@@ -33,6 +33,29 @@ class JdbcTodoService implements TodoService {
     return timestamp == null ? null : timestamp.toInstant();
   }
 
+  private static String normalizedQuery(String q) {
+    if (q == null) return null;
+    String s = q.trim().toLowerCase();
+    return s.isEmpty() ? null : s;
+  }
+
+  private static WhereArgs buildWhere(String q, Boolean completed) {
+    String normalizedQuery = normalizedQuery(q);
+    StringBuilder where = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+
+    if (normalizedQuery != null) {
+      where.append(" where lower(title) like ?");
+      args.add("%" + normalizedQuery + "%");
+    }
+    if (completed != null) {
+      where.append(where.length() == 0 ? " where " : " and ");
+      where.append("completed = ?");
+      args.add(completed);
+    }
+    return new WhereArgs(where.toString(), args);
+  }
+
   @Override
   public List<TodoResponse> findAll() {
     return jdbc.query(
@@ -61,6 +84,8 @@ class JdbcTodoService implements TodoService {
   public boolean delete(long id) {
     return jdbc.update("delete from todos where id = ?", id) > 0;
   }
+
+  // ---- helpers: builder where & normalizer ----
 
   @Override
   public Optional<TodoResponse> update(long id, UpdateTodoRequest request) {
@@ -94,21 +119,9 @@ class JdbcTodoService implements TodoService {
 
   @Override
   public PageResult<TodoResponse> findAll(String q, Boolean completed, Integer page, Integer size) {
-    String normalizedQuery = (q == null) ? null : q.trim().toLowerCase();
-
-    StringBuilder where = new StringBuilder();
-    List<Object> args = new ArrayList<>();
-
-    if (normalizedQuery != null && !normalizedQuery.isEmpty()) {
-      where.append(where.length() == 0 ? " where " : " and ");
-      where.append("lower(title) like ?");
-      args.add("%" + normalizedQuery + "%");
-    }
-    if (completed != null) {
-      where.append(where.length() == 0 ? " where " : " and ");
-      where.append("completed = ?");
-      args.add(completed);
-    }
+    WhereArgs wa = buildWhere(q, completed);
+    String where = wa.where();
+    List<Object> args = wa.args();
 
     // total
     String countSql = "select count(*) from todos" + where;
@@ -128,4 +141,6 @@ class JdbcTodoService implements TodoService {
 
     return new PageResult<>(items, total);
   }
+
+  private static record WhereArgs(String where, List<Object> args) {}
 }
