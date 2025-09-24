@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Request (Problem Details).
  */
 @WebMvcTest(TodoController.class)
-public class TodoControllerValidationTest {
+class TodoControllerValidationTest {
 
   @Autowired private MockMvc mockMvc;
 

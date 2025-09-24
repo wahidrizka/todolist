@@ -16,7 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = TodoV1Controller.class)
-public class TodoV1ControllerTest {
+class TodoV1ControllerTest {
 
   @Autowired private MockMvc mvc;
 
