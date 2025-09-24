@@ -79,7 +79,7 @@ class JdbcTodoServiceIntegrationTest {
   void findAll_pagination_shouldWork() {
     // Arrange: 25 rows
     for (int i = 1; i <= 25; i++) {
-      jdbcTemplate.update("insert into todos (title, completed) values (?,?)", "Task" + i, false);
+      jdbcTemplate.update("insert into todos (title, completed) values (?,?)", "Task " + i, false);
     }
 
     // page=0,size=10
