@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,7 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Menggunakan profil "prod" agar bean JdbcTodoService yang aktif.
  */
 @Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("prod")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @org.springframework.context.annotation.Import(JdbcTodoServiceIntegrationTest.TestDbConfig.class)
@@ -30,15 +29,6 @@ class JdbcTodoServiceIntegrationTest {
 
   @Autowired JdbcTemplate jdbcTemplate;
   @Autowired TodoService todoService;
-
-  static void registerDataSourceProps(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-    registry.add("spring.datasource.username", POSTGRES::getUsername);
-    registry.add("spring.datasource.password", POSTGRES::getPassword);
-    registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-    // Izinkan Flyway berjalan di test ini (default sudah on, ini explisit)
-    registry.add("spring.flyway.enabled", () -> "true");
-  }
 
   @BeforeEach
   void clean() {
