@@ -71,7 +71,7 @@ public class TodoController {
   @PatchMapping("/{id}")
   @Operation(summary = "Edit todo (partial update)")
   public ResponseEntity<TodoResponse> update(
-      @PathVariable long id, @RequestBody UpdateTodoRequest request) {
+      @PathVariable long id, @Valid @RequestBody UpdateTodoRequest request) {
     return service
         .update(id, request)
         .map(ResponseEntity::ok)

@@ -11,7 +11,8 @@ ARG GIT_REF=local
 ENV GIT_SHA=$GIT_SHA GIT_REF=$GIT_REF
 
 # Penting: gunakan APP_VERSION, bukan REVISION
-RUN mvn -B -ntp -DskipTests -Drevision=${APP_VERSION} package
+RUN SANITIZED="$(echo "${APP_VERSION}" | sed 's/^v//')" \
+    && mvn -B -ntp -DskipTests -Drevision="${SANITIZED}" package
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine

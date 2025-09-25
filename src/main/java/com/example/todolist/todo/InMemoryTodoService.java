@@ -34,7 +34,8 @@ public class InMemoryTodoService implements TodoService {
   public TodoResponse create(CreateTodoRequest req) {
     long id = seq.incrementAndGet();
     Instant now = Instant.now();
-    TodoResponse created = new TodoResponse(id, req.title(), false, now, now);
+    String title = req.title().trim();
+    TodoResponse created = new TodoResponse(id, title, false, now, now);
     store.put(id, created);
     return created;
   }

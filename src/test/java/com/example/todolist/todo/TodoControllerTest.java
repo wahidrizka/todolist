@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,8 +21,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Slice test untuk {@link TodoController} (MVC only). Storage dimock via {@link TodoService}. */
@@ -30,7 +31,7 @@ class TodoControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockBean private TodoService todoService;
+  @MockitoBean private TodoService todoService;
 
   // === Helpers ===
   private static TodoResponse todo(long id, String title, boolean completed) {
@@ -137,10 +138,10 @@ class TodoControllerTest {
     mockMvc
         .perform(get("/api/todos").param("page", "0").param("size", "0"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("validation"))
-        .andExpect(jsonPath("$.message").value("Invalid request parameters"))
-        .andExpect(jsonPath("$.violations.length()").value(1))
-        .andExpect(jsonPath("$.violations[0].param").value("findAllPaged.size"));
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Request parameter validation failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.violations[0].message").value("must be greater than 0"));
   }
 
   // === GET BY ID ===
@@ -237,5 +238,36 @@ class TodoControllerTest {
         .andExpect(status().isNotFound());
 
     verify(todoService).update(eq(999L), any());
+  }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 400 Problem+JSON saat title > 200")
+  void patch_shouldReturn400_withProblemJson_whenTitleTooLong() throws Exception {
+    String longTitle = "A".repeat(201);
+
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(String.format("{\"title\":\"%s\"}", longTitle)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Request validation failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.errors.title[0]").value("title maksimal 200 karakter"));
+  }
+
+  @Test
+  @DisplayName("PATCH /api/todos/{id} -> 400 Problem+JSON saat JSON malformed")
+  void patch_shouldReturn400_withProblemJson_whenMalformedJson() throws Exception {
+    mockMvc
+        .perform(
+            patch("/api/todos/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Bad JSON\"")) // kurang kurung tutup
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
+        .andExpect(jsonPath("$.title").value("Malformed JSON request"))
+        .andExpect(jsonPath("$.status").value(400));
   }
 }
