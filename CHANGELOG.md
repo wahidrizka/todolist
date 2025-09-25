@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.3](https://github.com/wahidrizka/todolist/compare/v0.7.2...v0.7.3) (2025-09-25)
+
+
+### Bug Fixes
+
+* **deploy:** strip 'v' prefix from release tag before pulling GHCR image ([1ed9602](https://github.com/wahidrizka/todolist/commit/1ed96025329ac7f067cb855306434649ca59a891))
+* **deploy:** strip 'v' prefix from release tag before pulling GHCR image ([aa197ab](https://github.com/wahidrizka/todolist/commit/aa197abf7d3ce58bf43c95dc3dcf22a98c7bcd46))
+
 ## [0.7.2](https://github.com/wahidrizka/todolist/compare/v0.7.1...v0.7.2) (2025-09-25)
 
 
