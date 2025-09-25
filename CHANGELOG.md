@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/wahidrizka/todolist/compare/v0.7.0...v0.7.1) (2025-09-25)
+
+
+### Bug Fixes
+
+* **build:** sync actuator build.version with release tag via ${revision} ([145a541](https://github.com/wahidrizka/todolist/commit/145a541350f868c90635e526a396bd0fc2fb02bd))
+* **todo:** trim title on create in InMemoryTodoService to mirror PATCH behavior ([59ca9a4](https://github.com/wahidrizka/todolist/commit/59ca9a4ec4004664fc3cbde1985eb5b123171942))
+
 ## [0.7.0](https://github.com/wahidrizka/todolist/compare/v0.6.0...v0.7.0) (2025-09-21)
 
 
