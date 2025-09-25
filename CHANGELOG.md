@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.2](https://github.com/wahidrizka/todolist/compare/v0.7.1...v0.7.2) (2025-09-25)
+
+
+### Bug Fixes
+
+* **release:** align release-please baseline to 0.7.1 and strip 'v' prefix in publish workflow ([4b5f299](https://github.com/wahidrizka/todolist/commit/4b5f299d9358b0fecb64dafbcf38116ea44e3694))
+* **release:** align release-please baseline to 0.7.1 and strip 'v' prefix in publish workflow ([6bc296c](https://github.com/wahidrizka/todolist/commit/6bc296cb7579fdb680f1cc11951bae56c5cf2594))
+
 ## [0.7.1](https://github.com/wahidrizka/todolist/compare/v0.7.0...v0.7.1) (2025-09-25)
 
 
