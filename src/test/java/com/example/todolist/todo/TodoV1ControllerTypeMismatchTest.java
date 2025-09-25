@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** Memastikan query param 'completed' yang tidak valid memicu Problem Details (400). */
@@ -15,7 +15,7 @@ class TodoV1ControllerTypeMismatchTest {
 
   @Autowired private MockMvc mockMvc;
 
-  @MockBean private TodoService todoService;
+  @MockitoBean private TodoService todoService;
 
   void get_withInvalidCompletedParam_shouldReturnProblemDetails() throws Exception {
     mockMvc
