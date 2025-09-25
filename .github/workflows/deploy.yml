@@ -69,6 +69,6 @@ jobs:
                     key: ${{ secrets.SSH_PRIVATE_KEY }}
                     command_timeout: 30m
                     script: |
-                        script: |
-                            echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
-                            IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
+                        IMG="${{ steps.img.outputs.image }}"
+                        echo "Deploying IMAGE=$IMG"
+                        IMAGE="$IMG" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
