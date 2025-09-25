@@ -46,20 +46,22 @@ API docs available at:
 
 ### Health & Version
 
-- `GET /api/health` → **200 OK**
-- `GET /api/version` → **200 OK** (Build & Git info)
+- `GET /actuator/health` → **200 OK** (`{"status":"UP"}`)
+- `GET /actuator/info`   → **200 OK** (Build & Git info jika di-enable)
 
 ### Todos (Legacy)
 
 - `POST /api/todos`  
   Body: `{ "title": "string (required, max 200)" }`  
   Res: **201 Created** → `TodoResponse`
-- `GET /api/todos`  
+- `GET /api/todos` (tanpa `page` & `size`)
+  Res: **200 OK** → `List<TodoResponse>`
+- `GET /api/todos` (dengan `page` & `size`)
   Query (optional):
     - `q`: string (filter by title, contains)
     - `completed`: boolean
     - `page`: integer ≥ 0
-    - `size`: 1..200  
+    - `size`: 1..200
       Res: **200 OK** → `PageResult<TodoResponse>`
 - `GET /api/todos/{id}` → **200 OK** → `TodoResponse` | **404 Not Found**
 - `PATCH /api/todos/{id}` (partial)  
@@ -72,8 +74,8 @@ API docs available at:
 ### Todos v1 (Default Pagination)
 
 - `GET /api/v1/todos`  
-  Default: `page=0`, `size=20` (overridable via query params)  
-  Query same as legacy.  
+  Default: `page=0`, `size=20` (bisa dioverride), **max `size=200`**
+  Query sama seperti legacy (`q`, `completed`, `page`, `size`)
   Res: **200 OK** → `PageResult<TodoResponse>`
 
 ### Error Format — RFC 7807 (Problem Details)
