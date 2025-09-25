@@ -50,13 +50,16 @@ jobs:
                       TAG="$(gh release view --repo "${{ github.repository }}" --json tagName -q .tagName)"
                     fi
 
+                    TAG="${TAG#refs/tags/}"
+                    TAG="${TAG#v}"
+
                     if [ -z "${TAG}" ]; then
                       echo "Gagal menentukan TAG rilis." >&2
                       exit 1
                     fi
 
                     echo "image=${REPO}:${TAG}" >> "$GITHUB_OUTPUT"
-                    echo "Will deploy $REPO:$TAG"
+                    echo "Will deploy ${REPO}:${TAG}"
 
             -   name: Deploy over SSH
                 uses: appleboy/ssh-action@v1
@@ -66,5 +69,6 @@ jobs:
                     key: ${{ secrets.SSH_PRIVATE_KEY }}
                     command_timeout: 30m
                     script: |
-                        echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
-                        IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
+                        script: |
+                            echo "Deploying IMAGE=${{ steps.img.outputs.image }}"
+                            IMAGE="${{ steps.img.outputs.image }}" NAME="todolist" PORT="8080" bash /opt/todolist/deploy.sh
