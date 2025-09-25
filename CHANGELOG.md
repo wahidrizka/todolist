@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.4](https://github.com/wahidrizka/todolist/compare/v0.7.3...v0.7.4) (2025-09-25)
+
+
+### Bug Fixes
+
+* **ci:** remove nested 'script:' in deploy workflow SSH step ([f094dbc](https://github.com/wahidrizka/todolist/commit/f094dbc1931ee83a986f02385f601e5098d56ffe))
+* **ci:** remove nested 'script:' in deploy workflow SSH step ([0edd984](https://github.com/wahidrizka/todolist/commit/0edd984136edd6594c7bdff0e723b384b5437ebd))
+
 ## [0.7.3](https://github.com/wahidrizka/todolist/compare/v0.7.2...v0.7.3) (2025-09-25)
 
 
