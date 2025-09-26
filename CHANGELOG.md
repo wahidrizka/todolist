@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.5](https://github.com/wahidrizka/todolist/compare/v0.7.4...v0.7.5) (2025-09-26)
+
+
+### Bug Fixes
+
+* **db:** wrap JDBC write operations in transactions ([1561d6e](https://github.com/wahidrizka/todolist/commit/1561d6ed9a2def012d659cda64056c781aa39277))
+* **db:** wrap JDBC write operations in transactions ([6dda74a](https://github.com/wahidrizka/todolist/commit/6dda74a15991f75fa9ea351310f0ad9979f4885a))
+
 ## [0.7.4](https://github.com/wahidrizka/todolist/compare/v0.7.3...v0.7.4) (2025-09-25)
 
 
