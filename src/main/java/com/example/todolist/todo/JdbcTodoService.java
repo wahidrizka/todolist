@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Profile("prod")
@@ -71,6 +72,7 @@ class JdbcTodoService implements TodoService {
   }
 
   @Override
+  @Transactional
   public TodoResponse create(CreateTodoRequest request) {
     String title = request.title().trim();
     return jdbc.queryForObject(
@@ -81,6 +83,7 @@ class JdbcTodoService implements TodoService {
   }
 
   @Override
+  @Transactional
   public boolean delete(long id) {
     return jdbc.update("delete from todos where id = ?", id) > 0;
   }
@@ -88,6 +91,7 @@ class JdbcTodoService implements TodoService {
   // ---- helpers: builder where & normalizer ----
 
   @Override
+  @Transactional
   public Optional<TodoResponse> update(long id, UpdateTodoRequest request) {
     // Normalisasi title bila diisi
     String newTitle = request.title();
