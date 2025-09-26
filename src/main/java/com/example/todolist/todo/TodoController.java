@@ -3,6 +3,7 @@ package com.example.todolist.todo;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -35,6 +40,16 @@ public class TodoController {
   }
 
   @PostMapping
+  @ApiResponses({
+    @ApiResponse(responseCode = "201", description = "Created"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Validation error",
+        content =
+            @Content(
+                mediaType = "application/problem+json",
+                schema = @Schema(implementation = ProblemDetail.class)))
+  })
   @Operation(summary = "Buat todo baru")
   public ResponseEntity<TodoResponse> create(@Valid @RequestBody CreateTodoRequest request) {
     TodoResponse created = service.create(request);
@@ -48,6 +63,16 @@ public class TodoController {
   }
 
   @GetMapping(params = {"page", "size"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "OK"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Parameter validation error",
+        content =
+            @Content(
+                mediaType = "application/problem+json",
+                schema = @Schema(implementation = ProblemDetail.class)))
+  })
   @Operation(summary = "Ambil todos dengan filter dan pagination")
   public ResponseEntity<PageResult<TodoResponse>> findAllPaged(
       @RequestParam(name = "q", required = false) String q,
@@ -60,6 +85,10 @@ public class TodoController {
   }
 
   @GetMapping("/{id}")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "OK"),
+    @ApiResponse(responseCode = "404", description = "Not found")
+  })
   @Operation(summary = "Ambil todo by id")
   public ResponseEntity<TodoResponse> findById(@PathVariable long id) {
     return service
@@ -69,6 +98,17 @@ public class TodoController {
   }
 
   @PatchMapping("/{id}")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "OK"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Validation error",
+        content =
+            @Content(
+                mediaType = "application/problem+json",
+                schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))),
+    @ApiResponse(responseCode = "404", description = "Not found")
+  })
   @Operation(summary = "Edit todo (partial update)")
   public ResponseEntity<TodoResponse> update(
       @PathVariable long id, @Valid @RequestBody UpdateTodoRequest request) {
@@ -79,6 +119,10 @@ public class TodoController {
   }
 
   @DeleteMapping("/{id}")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "No Content"),
+    @ApiResponse(responseCode = "404", description = "Not found")
+  })
   @Operation(summary = "Hapus todo by id")
   public ResponseEntity<Void> delete(@PathVariable long id) {
     boolean removed = service.delete(id);
