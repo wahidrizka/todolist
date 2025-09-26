@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.6](https://github.com/wahidrizka/todolist/compare/v0.7.5...v0.7.6) (2025-09-26)
+
+
+### Bug Fixes
+
+* **api-docs:** document error/edge responses for legacy todos controller ([a63a9ab](https://github.com/wahidrizka/todolist/commit/a63a9ab6e334a69083a134b955ea591495b629a6))
+* **api-docs:** document error/edge responses for legacy todos controller ([5a9352b](https://github.com/wahidrizka/todolist/commit/5a9352b6ce3546d0554ea0a0979bcbfb95f8732d))
+
 ## [0.7.5](https://github.com/wahidrizka/todolist/compare/v0.7.4...v0.7.5) (2025-09-26)
 
 
